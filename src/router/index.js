@@ -1,17 +1,23 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Hello from '@/components/Hello'
+import Home from '@/components/Home'
 import About from '@/components/About'
 import Calendar from '@/components/Calendar'
 
 Vue.use(Router)
+
+let events = [],
+    users = ["A", "B", "C"];
+
+
 
 export default new Router({
   routes: [
       {
           path: '/',
           name: 'Home',
-          component: Hello
+          component: Home,
+          props: {events: events, users: users, user: "A"}
       },
       {
           path: '/about',
@@ -21,7 +27,8 @@ export default new Router({
       {
           path: '/team-dashboard',
           name: 'Calendar',
-          component: Calendar
+          component: Calendar,
+          props: {users: users, events: events}
       }
   ]
 })

@@ -11,7 +11,8 @@
             </ul>
         </div>
 
-        <ul class="weekdays">
+        <ul class="weekdays cal-view">
+            <li></li>
             <li>Mo</li>
             <li>Tu</li>
             <li>We</li>
@@ -21,23 +22,32 @@
             <li>Su</li>
         </ul>
 
-        <ul class="days"> 
-            <li v-for="d in days" v-bind:class="{innactive: d.isInnactive}">
-                {{d.date}}
-            </li>
+        <ul class="days cal-view">
+            <template v-for="w in weeks">
+                <li></li>
+                <li v-for="d in w.days" v-bind:class="{innactive: d.isInnactive}" class="week-header">
+                    {{d.date}}
+                </li>
+                <template v-for="u in w.users">
+                    <li>{{u.name}}</li>
+                    <li v-for="ev in u.events"></li>
+                </template>
+            </template>
         </ul>
     </div>
 </template>
 
 <script>
- let getCal =  (date) => {
+ let getCal =  (date, users, events) => {
      let d = new Date(date),
          locale = "en-us",
          month = d.toLocaleString(locale, { month: "long" }),
          year = d.getFullYear();
 
      let    m = d.getMonth(),
-            days = [];
+            days = [],
+            weeks = [];
+            //users = ["A", "B", "C"];
 
      d.setDate(1);
      let when = d.getDay() - 1;
@@ -45,48 +55,63 @@
          when = when + 7;
      }
      d.setDate(1 - when);
+
+     let count = 0;
      while(d.getMonth() !== (m + 1) % 12 || d.getDay() !== 1){
+         if (count % 7 === 0){
+             days = [];
+             weeks.push({days: days});
+         }
          days.push({date: d.getDate(), isInnactive: d.getMonth() !== m});
          d.setDate(d.getDate() + 1);
+         count++;
      }
 
+     weeks.forEach(w => {
+         w.users = [];
+         users.forEach(u => {
+             let u_events = Array(7).fill(u);
+             w.users.push({name: u, events: u_events});
+         });
+     });
+     
      return {
          month: month,
          year: year,
-         days: days
+         weeks: weeks
      }
  }
  
  export default {
      name: 'calendar',
-     
+     props: ['users', 'events'],
      data () {
          let d = new Date(),
-             cal = getCal(d);
-         
+             cal = getCal(d, this.users);
+
          return {
              state: d,
              month: cal.month,
              year: cal.year,
-             days: cal.days
+             weeks: cal.weeks
          }
      },
 
      methods: {
          prevMonth: function () {
              this.state.setMonth(this.state.getMonth() - 1);
-             let cal = getCal(this.state);
+             let cal = getCal(this.state, this.users, this.events);
              this.month = cal.month;
              this.year = cal.year;
-             this.days = cal.days;
+             this.weeks = cal.weeks;
          },
          
          nextMonth: function () {
              this.state.setMonth(this.state.getMonth() + 1);
-             let cal = getCal(this.state);
+             let cal = getCal(this.state, this.users, this.events);
              this.month = cal.month;
              this.year = cal.year;
-             this.days = cal.days;
+             this.weeks = cal.weeks;
          }
      }
  }
@@ -95,10 +120,19 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
  $header-background-color: #1abc9c;
+ $cal-column-widht: 11.5%;
  
  ul {list-style-type: none;}
  body {font-family: Verdana, sans-serif;}
 
+ .users-col{
+     float:left;
+ }
+
+ .cal-view{
+
+ }
+ 
  /* Month header */
  .month {
      padding: 70px 25px;
@@ -148,9 +182,9 @@
 
  .weekdays li {
      display: inline-block;
-     width: 13.6%;
+     width: $cal-column-widht;
      color: #666;
-     text-align: center;
+     text-align: right;
  }
 
  /* Days (1-31) */
@@ -163,8 +197,8 @@
  .days li {
      list-style-type: none;
      display: inline-block;
-     width: 13.6%;
-     text-align: center;
+     width: $cal-column-widht;
+     text-align: right;
      margin-bottom: 5px;
      font-size:12px;
      color:#777;
@@ -181,5 +215,10 @@
      padding: 5px;
      background: #dddddd;
      color: white !important
+ }
+
+ .week-header {
+     background: #404a5b;
+     color:white !important
  }
 </style>
