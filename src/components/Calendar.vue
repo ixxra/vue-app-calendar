@@ -28,9 +28,15 @@
                 <li v-for="d in w.days" v-bind:class="{innactive: d.isInnactive}" class="week-header">
                     {{d.date}}
                 </li>
-                <template v-for="u in w.users">
-                    <li>{{u.name}}</li>
-                    <li v-for="ev in u.events"></li>
+                <template v-for="u in users">
+                    <li>{{u}}</li>
+                    <li v-for="day_evs in w.events">
+                        <template v-for="ev in day_evs">
+                            <span v-if="ev.participants.includes(u)">
+                                {{ev.name}}
+                            </span>
+                        </template>
+                    </li>
                 </template>
             </template>
         </ul>
@@ -38,56 +44,76 @@
 </template>
 
 <script>
+
+
  let getCal =  (date, users, events) => {
      let d = new Date(date),
          locale = "en-us",
          month = d.toLocaleString(locale, { month: "long" }),
          year = d.getFullYear();
+     
+     let m = d.getMonth(),
+         days = [],
+         week_events = [],
+         weeks = [];
 
-     let    m = d.getMonth(),
-            days = [],
-            weeks = [];
-            //users = ["A", "B", "C"];
-
+     d.setHours(0,0,0,0);
      d.setDate(1);
+
      let when = d.getDay() - 1;
      if (when < 0){
          when = when + 7;
      }
+     
      d.setDate(1 - when);
-
+     
      let count = 0;
+
+     
      while(d.getMonth() !== (m + 1) % 12 || d.getDay() !== 1){
          if (count % 7 === 0){
              days = [];
-             weeks.push({days: days});
+             week_events = [];
+             weeks.push({days: days, events: week_events});
          }
+
+         
          days.push({date: d.getDate(), isInnactive: d.getMonth() !== m});
+
+         let day_events = [];
+         week_events.push(day_events);
+         
+         events.forEach(ev => {
+             let d1 = new Date(ev.start_date), d2 = new Date(ev.end_date);
+             d1.setHours(0,0,0,0);
+             d2.setHours(0,0,0,0);
+             
+             if (d1 <= d && d <= d2){
+                 day_events.push(ev);
+             }
+         });
+         
          d.setDate(d.getDate() + 1);
          count++;
-     }
-
-     weeks.forEach(w => {
-         w.users = [];
-         users.forEach(u => {
-             let u_events = Array(7).fill(u);
-             w.users.push({name: u, events: u_events});
-         });
-     });
+     };
      
      return {
          month: month,
          year: year,
-         weeks: weeks
-     }
- }
+         weeks: weeks,
+     };
+ };
+
+
+
+ 
  
  export default {
      name: 'calendar',
      props: ['users', 'events'],
      data () {
          let d = new Date(),
-             cal = getCal(d, this.users);
+             cal = getCal(d, this.users, this.events);
 
          return {
              state: d,

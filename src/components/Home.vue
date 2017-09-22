@@ -19,13 +19,21 @@
           </div>
           <div class="form-group">
               <label for="start_date">Start Date</label>
-              <input name="start_date" type="date" class="form-control"
+              <input name="start_date" type="datetime-local" class="form-control"
                      id="start_date" :min="min_date" v-model="event.start_date" required />
           </div>
           <div class="form-group">
               <label for="end_date">End Date</label>
-              <input name="end_date" type="date" class="form-control"
+              <input name="end_date" type="datetime-local" class="form-control"
                      id="end_date" :min="event.start_date" v-model="event.end_date" required />
+          </div>
+          <h3>Participants</h3>
+          <div class="participants-box" v-for="u in users">
+              <label>
+                  <input type="checkbox" :value="u"
+                         v-model="event.participants" />
+                  {{u}}
+              </label>
           </div>
       </form>
       <h1>Your Events</h1>
@@ -45,13 +53,26 @@
 </template>
 
 <script>
+
+ 
+ let tzOffset = (new Date()).getTimezoneOffset() * 60000,
+     setupEvent = (user) => {
+         return {name: '', desc: '', loc: '',
+          start_date: '', end_date: '', participants: [user],
+          tzOffset: tzOffset};
+     };
+ 
 export default {
      name: 'hello',
      props: ['events', 'users', 'user'],
      data () {
-         let min_date = (new Date()).toISOString().split('T')[0];
+         let min_date = new Date(),
+             time_string = min_date.toTimeString();
+         time_string = time_string.slice(0, time_string.lastIndexOf(':'));
+         min_date = min_date.toISOString().split('T')[0] + 'T' + time_string;
+         
          return {
-             event: {name: '', desc: '', loc: '', start_date: '', end_date: ''},
+             event: setupEvent(this.user),
              min_date: min_date,
              updating: false,
          }
@@ -63,7 +84,7 @@ export default {
                  return;
              }
              this.events.push(this.event);
-             this.event = {name: '', desc: '', loc: '', start_date: '', end_date: ''};
+             this.event = setupEvent(this.user);
          },
          onEdit(index) {
              this.updating = true;
@@ -73,7 +94,7 @@ export default {
          onUpdate(index) {
              this.updating = false;
              this.events[this.updateIndex] = this.event;
-             this.event = {name: '', desc: '', loc: '', start_date: '', end_date: ''};
+             this.event = setupEvent(this.user);
          },
          onDelete(index) {
              this.events.splice(index, 1);
@@ -141,5 +162,18 @@ export default {
 
  .event .desc {
      text-align: left;
+ }
+
+ .participants-box{
+     @extend .form-check;
+     @extend .form-check-inline;
+ }
+
+ .participants-box label {
+     @extend .form-check-label;
+ }
+
+ .participants-box input {
+     @extend .form-check-input;
  }
 </style>

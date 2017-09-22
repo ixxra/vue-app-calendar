@@ -1,5 +1,5 @@
 <template>
-    <div class="hello">
+    <div class="about">
         <h1>{{ msg }}</h1>
         <p>
             This is a proof of concept of a prototype.
@@ -9,7 +9,7 @@
 
 <script>
 export default {
-  name: 'hello',
+  name: 'about',
   data () {
     return {
       msg: 'About this app'
